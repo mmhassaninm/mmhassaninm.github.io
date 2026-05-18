@@ -400,22 +400,42 @@
     function genSid() { return `sect_${Math.random().toString(36).slice(2, 10)}`; }
 
     // ============ LOAD ============
+    function showLoadError(message) {
+      const list = document.getElementById('sections-list');
+      list.innerHTML = `
+        <div style="padding: 20px 12px; text-align: center;">
+          <div style="font-size: 32px; margin-bottom: 8px;">⚠️</div>
+          <p style="font-weight: 600; font-size: 14px; color: var(--danger); margin-bottom: 6px;">Failed to load page</p>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">${escapeHTML(message || 'Unknown error')}</p>
+          <button class="btn btn-secondary" style="flex:0; padding:8px 14px;" onclick="loadPage()">Retry</button>
+        </div>`;
+    }
+
     async function loadPage() {
+      const list = document.getElementById('sections-list');
+      list.innerHTML = `<p style="padding: 12px; color: var(--text-muted); font-size: 13px;">Loading…</p>`;
       try {
         const url = pageId ? `/api/pages/${pageId}` : `/api/pages?slug=${encodeURIComponent(pageSlug)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!data.success && !data.page) throw new Error(data.message || 'Failed to load');
+        const res = await fetch(url, { headers: authHeaders() });
+        let data = null;
+        try { data = await res.json(); } catch (_) { /* non-JSON */ }
+        if (!res.ok || !data || (!data.success && !data.page)) {
+          const msg = (data && data.message) || `HTTP ${res.status} ${res.statusText || ''}`.trim();
+          throw new Error(msg);
+        }
         page = data.page;
         pageId = page._id;
+        if (!Array.isArray(page.sections)) page.sections = [];
         // Update URL if we loaded by slug
         if (pageSlug) history.replaceState(null, '', `page-builder.html?id=${pageId}`);
         renderAll();
       } catch (err) {
-        console.error(err);
-        toast('Failed to load page', 'error');
+        console.error('loadPage failed:', err);
+        showLoadError(err.message);
+        toast('Failed to load page: ' + err.message, 'error');
       }
     }
+    window.loadPage = loadPage;
 
     function renderAll() {
       document.getElementById('page-title').value = page.title || '';
@@ -788,10 +808,9 @@
       previewRefreshTimer = setTimeout(refreshPreview, 600);
     }
     function refreshPreview() {
+      if (!pageId) return;
       const frame = document.getElementById('preview-frame');
-      const url = `/preview.html?pageId=${pageId}&t=${Date.now()}`;
-      // Use postMessage if possible, otherwise reload
-      frame.src = url;
+      frame.src = `/preview?pageId=${pageId}&t=${Date.now()}`;
     }
     document.getElementById('btn-refresh-preview').addEventListener('click', refreshPreview);
 

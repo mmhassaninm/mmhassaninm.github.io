@@ -6,9 +6,14 @@ const PortfolioSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  category: {
+    type: String,
+    default: '',
+    trim: true
+  },
   description: {
     type: String,
-    required: true
+    default: ''
   },
   tags: {
     type: [String],
@@ -16,7 +21,7 @@ const PortfolioSchema = new mongoose.Schema({
   },
   imageUrl: {
     type: String,
-    required: true
+    default: ''
   },
   liveUrl: {
     type: String,
