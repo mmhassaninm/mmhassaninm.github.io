@@ -2,9 +2,9 @@
   "routes": [
     { "handle": "filesystem" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/admin$", "dest": "/admin/index.html" },
-    { "src": "/admin/$", "dest": "/admin/index.html" },
-    { "src": "/admin/(.*)", "dest": "/admin/$1" },
+    { "src": "/admin$", "dest": "/public/admin/index.html" },
+    { "src": "/admin/$", "dest": "/public/admin/index.html" },
+    { "src": "/admin/(.*)", "dest": "/public/admin/$1" },
     { "src": "/preview$", "dest": "/public/preview.html" },
     { "src": "/(.*\\.(css|js|png|jpg|svg|ico|woff2?))", "dest": "/public/$1" },
     { "src": "/(.*)", "dest": "/public/index.html" }
