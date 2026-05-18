@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniBot — Admin Login</title>
+  
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #0f0f1b;
+      --card-bg: rgba(26, 26, 46, 0.85);
+      --accent: #95BF47; /* Shopify Green */
+      --accent-hover: #7ea438;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: rgba(149, 191, 71, 0.15);
+      --input-bg: rgba(15, 15, 27, 0.6);
+      --error-color: #ef4444;
+      --success-color: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at center, #1b1b36 0%, var(--bg-dark) 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Background decorative element */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(149, 191, 71, 0.08) 0%, transparent 70%);
+      top: -100px;
+      left: -100px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(149, 191, 71, 0.05) 0%, transparent 70%);
+      bottom: -150px;
+      right: -150px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      z-index: 10;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      transform: translateY(20px);
+      opacity: 0;
+      animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideIn {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .logo-container {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 64px;
+      height: 64px;
+      background: rgba(149, 191, 71, 0.1);
+      border: 1px solid rgba(149, 191, 71, 0.3);
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+
+    .logo-icon {
+      font-size: 32px;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text-main);
+      font-size: 15px;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(149, 191, 71, 0.2);
+      transform: scale(1.01);
+    }
+
+    /* Setup field transitions */
+    .setup-field {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .setup-field.active {
+      max-height: 100px;
+      opacity: 1;
+      margin-bottom: 24px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--accent);
+      color: #0f0f1b;
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-submit:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(149, 191, 71, 0.3);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      background: var(--text-muted);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(15, 15, 27, 0.2);
+      border-radius: 50%;
+      border-top-color: #0f0f1b;
+      animation: spin 0.8s linear infinite;
+      display: none;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading .spinner {
+      display: block;
+    }
+
+    /* Toast Notification System */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: rgba(26, 26, 46, 0.95);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 24px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      transform: translateX(120%);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(10px);
+      min-width: 280px;
+      max-width: 400px;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--success-color);
+    }
+
+    .toast.error {
+      border-left: 4px solid var(--error-color);
+    }
+
+    .toast-icon {
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toast.success .toast-icon {
+      color: var(--success-color);
+    }
+
+    .toast.error .toast-icon {
+      color: var(--error-color);
+    }
+
+    .toast-message {
+      font-size: 14px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <div class="container">
+    <div class="login-card">
+      <div class="header">
+        <div class="logo-container">
+          <span class="logo-icon">🟢</span>
+        </div>
+        <h1 class="title" id="form-title">OmniBot CMS</h1>
+        <p class="subtitle" id="form-subtitle">Enter your admin credentials to login</p>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <div class="input-wrapper">
+            <input class="form-input" type="text" id="username" placeholder="e.g. admin" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <input class="form-input" type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+        </div>
+
+        <!-- Hidden initially, shown only if the server needs initial bootstrapping -->
+        <div class="form-group setup-field" id="setup-key-container">
+          <label class="form-label" for="setupKey">ADMIN_SETUP_KEY</label>
+          <div class="input-wrapper">
+            <input class="form-input" type="password" id="setupKey" placeholder="Enter seeding key from .env">
+          </div>
+        </div>
+
+        <button class="btn-submit" type="submit" id="btn-submit">
+          <span id="btn-text">Sign In</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Toast helper
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <span class="toast-icon">${type === 'success' ? '✓' : '✗'}</span>
+        <span class="toast-message">${message}</span>
+      `;
+      container.appendChild(toast);
+      
+      // Trigger smooth transition
+      setTimeout(() => {
+        toast.classList.add('show');
+      }, 50);
+
+      // Automatic dismiss
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          toast.remove();
+        }, 400);
+      }, 4000);
+    }
+
+    const form = document.getElementById('login-form');
+    const submitBtn = document.getElementById('btn-submit');
+    const btnText = document.getElementById('btn-text');
+    const setupField = document.getElementById('setup-key-container');
+    const setupKeyInput = document.getElementById('setupKey');
+    const formTitle = document.getElementById('form-title');
+    const formSubtitle = document.getElementById('form-subtitle');
+
+    let needsSetup = false;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const setupKey = setupKeyInput.value.trim();
+
+      if (!username || !password) {
+        showToast('Please enter both username and password.', 'error');
+        return;
+      }
+
+      // Set loading state
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+      btnText.textContent = needsSetup ? 'Bootstrapping...' : 'Authenticating...';
+
+      try {
+        const payload = { username, password };
+        if (needsSetup && setupKey) {
+          payload.setupKey = setupKey;
+        }
+
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showToast(data.message || 'Authenticated successfully!', 'success');
+          
+          // Save JWT in localStorage
+          localStorage.setItem('adminToken', data.token);
+
+          // Redirect to dashboard
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1000);
+        } else {
+          // Check if system requires seeding
+          if (data.needsSetup) {
+            needsSetup = true;
+            setupField.classList.add('active');
+            setupKeyInput.required = true;
+            formTitle.textContent = 'OmniBot Seeding';
+            formSubtitle.textContent = 'Specify account credentials & setup key to bootstrap your first admin';
+            btnText.textContent = 'Bootstrap Admin';
+            showToast(data.message, 'error');
+          } else {
+            showToast(data.message || 'Authentication failed. Please check credentials.', 'error');
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Network error. Unable to connect to authentication server.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        btnText.textContent = needsSetup ? 'Bootstrap Admin' : 'Sign In';
+      }
+    });
+
+    // Check if user is already logged in, redirect them
+    const existingToken = localStorage.getItem('adminToken');
+    if (existingToken) {
+      // Very quick verification check would be here; for now, we just redirect if token exists
+      // The dashboard itself will perform a real verification
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>
