@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalyst CMS — Page Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-bg: #1a1a2e;
+      --accent: #95BF47;
+      --accent-hover: #7ea438;
+      --text-dark: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --bg-soft: #f9fafb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', -apple-system, sans-serif; }
+    html, body { height: 100%; }
+    body { background: var(--bg-soft); color: var(--text-dark); overflow: hidden; }
+
+    .builder {
+      display: grid;
+      grid-template-columns: 320px 1fr 440px;
+      height: 100vh;
+    }
+
+    /* ============ LEFT PANEL ============ */
+    .panel-left {
+      background: #fff; border-right: 1px solid var(--border-color);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .panel-left-header {
+      padding: 18px 20px; border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .back-btn { text-decoration: none; color: var(--text-muted); font-size: 18px; padding: 4px 8px; border-radius: 6px; }
+    .back-btn:hover { background: var(--bg-soft); color: var(--text-dark); }
+    .page-title-input { flex: 1; border: none; font-size: 16px; font-weight: 700; padding: 6px 8px; border-radius: 6px; }
+    .page-title-input:focus { outline: none; background: var(--bg-soft); }
+    .status-pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; }
+    .status-pill.draft { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .status-pill.published { background: rgba(16,185,129,0.15); color: var(--success); }
+
+    .add-section-btn {
+      margin: 16px 20px 12px; padding: 12px; background: rgba(149,191,71,0.08);
+      border: 1px dashed var(--accent); color: var(--accent); border-radius: 10px;
+      font-weight: 600; cursor: pointer; font-size: 14px; font-family: inherit;
+    }
+    .add-section-btn:hover { background: rgba(149,191,71,0.15); }
+
+    .sections-list { flex: 1; overflow-y: auto; padding: 4px 12px 12px; }
+    .section-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px; margin-bottom: 6px; background: #fff;
+      border: 1px solid var(--border-color); border-radius: 10px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .section-item:hover { border-color: var(--accent); }
+    .section-item.active { border-color: var(--accent); background: rgba(149,191,71,0.06); }
+    .section-item.dragging { opacity: 0.4; }
+    .section-item.drag-over { border-top: 3px solid var(--accent); }
+    .drag-handle { color: var(--text-muted); cursor: grab; font-size: 16px; user-select: none; }
+    .section-info { flex: 1; min-width: 0; }
+    .section-label { font-size: 13px; font-weight: 600; }
+    .section-type { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .section-item.hidden .section-label { opacity: 0.5; text-decoration: line-through; }
+    .section-actions { display: flex; gap: 4px; }
+    .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 14px; }
+    .icon-btn:hover { background: var(--bg-soft); color: var(--text-dark); }
+    .icon-btn.danger:hover { color: var(--danger); background: rgba(239,68,68,0.08); }
+
+    .panel-left-footer {
+      padding: 16px 20px; border-top: 1px solid var(--border-color);
+      display: flex; gap: 8px;
+    }
+    .btn { padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; font-family: inherit; flex: 1; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: #fff; color: var(--text-dark); border: 1px solid var(--border-color); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ============ MIDDLE PANEL ============ */
+    .panel-middle {
+      background: var(--bg-soft); overflow-y: auto; padding: 32px 36px;
+    }
+    .editor-empty {
+      display: flex; align-items: center; justify-content: center; height: 100%;
+      flex-direction: column; gap: 12px; color: var(--text-muted); text-align: center;
+    }
+    .editor-empty .icon { font-size: 48px; opacity: 0.4; }
+    .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .editor-header h3 { font-size: 22px; font-weight: 700; }
+    .editor-header .editor-icon { font-size: 28px; margin-right: 8px; }
+
+    .form-field { margin-bottom: 18px; }
+    .form-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-dark); }
+    .form-field input[type="text"], .form-field input[type="email"], .form-field textarea, .form-field select {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px;
+      font-size: 14px; font-family: inherit; background: #fff;
+    }
+    .form-field textarea { min-height: 90px; resize: vertical; }
+    .form-field input:focus, .form-field textarea:focus, .form-field select:focus {
+      outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(149,191,71,0.15);
+    }
+    .form-field.checkbox { display: flex; align-items: center; gap: 8px; }
+    .form-field.checkbox input { width: auto; }
+    .form-field.checkbox label { margin-bottom: 0; }
+
+    .list-editor { background: #fff; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; }
+    .list-item { padding: 12px; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-soft); }
+    .list-item:last-child { margin-bottom: 8px; }
+    .list-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .btn-add-item { width: 100%; padding: 10px; background: transparent; border: 1px dashed var(--border-color); border-radius: 8px; color: var(--text-muted); font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-add-item:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ============ RIGHT PANEL (PREVIEW) ============ */
+    .panel-right {
+      background: #fff; border-left: 1px solid var(--border-color);
+      display: flex; flex-direction: column;
+    }
+    .panel-right-header {
+      padding: 12px 16px; border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .device-toggle { display: flex; background: var(--bg-soft); padding: 3px; border-radius: 8px; }
+    .device-toggle button { background: none; border: none; padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 6px; font-family: inherit; }
+    .device-toggle button.active { background: #fff; color: var(--text-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .preview-container { flex: 1; background: #1a1a26; padding: 16px; display: flex; align-items: flex-start; justify-content: center; overflow: hidden; }
+    .preview-frame { background: #fff; border: none; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: width 0.3s; width: 100%; height: 100%; }
+    .preview-frame.mobile { width: 375px; max-width: 100%; }
+
+    .panel-right-footer { padding: 8px 16px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-muted); text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ============ SECTION PICKER OVERLAY ============ */
+    .picker-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 500; padding: 20px; }
+    .picker-backdrop.open { display: flex; }
+    .picker {
+      background: #fff; border-radius: 16px; width: 100%; max-width: 720px;
+      max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    }
+    .picker-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .picker-header h3 { font-size: 18px; font-weight: 700; }
+    .picker-body { padding: 20px; }
+    .picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .picker-card {
+      padding: 16px; border: 1px solid var(--border-color); border-radius: 10px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .picker-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .picker-card .picker-icon { font-size: 24px; margin-bottom: 8px; }
+    .picker-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .picker-card p { font-size: 12px; color: var(--text-muted); }
+
+    .toast { position: fixed; top: 24px; right: 24px; background: #1f2937; color: #fff; padding: 14px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; transform: translateY(-20px); opacity: 0; transition: all 0.3s; max-width: 360px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: var(--success); }
+
+    @media (max-width: 1100px) {
+      .builder { grid-template-columns: 280px 1fr; }
+      .panel-right { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="builder">
+    <!-- LEFT PANEL -->
+    <aside class="panel-left">
+      <div class="panel-left-header">
+        <a href="pages.html" class="back-btn">←</a>
+        <input type="text" class="page-title-input" id="page-title" placeholder="Page Title">
+        <span class="status-pill" id="status-pill">Draft</span>
+      </div>
+
+      <button class="add-section-btn" id="btn-add-section">+ Add Section</button>
+
+      <div class="sections-list" id="sections-list">
+        <p style="padding: 12px; color: var(--text-muted); font-size: 13px;">Loading…</p>
+      </div>
+
+      <div class="panel-left-footer">
+        <button class="btn btn-secondary" id="btn-save-draft">Save Draft</button>
+        <button class="btn btn-primary" id="btn-publish">Publish</button>
+      </div>
+    </aside>
+
+    <!-- MIDDLE PANEL -->
+    <section class="panel-middle">
+      <div id="editor-area">
+        <div class="editor-empty">
+          <div class="icon">✏️</div>
+          <h3>Select a section to edit</h3>
+          <p>Click a section from the left to edit its content.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL -->
+    <aside class="panel-right">
+      <div class="panel-right-header">
+        <strong style="font-size: 13px;">Live Preview</strong>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div class="device-toggle">
+            <button id="device-desktop" class="active">🖥️ Desktop</button>
+            <button id="device-mobile">📱 Mobile</button>
+          </div>
+          <button class="icon-btn" id="btn-refresh-preview" title="Refresh">🔄</button>
+        </div>
+      </div>
+      <div class="preview-container">
+        <iframe id="preview-frame" class="preview-frame" src="about:blank"></iframe>
+      </div>
+      <div class="panel-right-footer">Live Preview</div>
+    </aside>
+  </div>
+
+  <!-- SECTION PICKER OVERLAY -->
+  <div class="picker-backdrop" id="picker-backdrop">
+    <div class="picker">
+      <div class="picker-header">
+        <h3>Add a Section</h3>
+        <button class="icon-btn" id="picker-close" style="font-size: 20px;">×</button>
+      </div>
+      <div class="picker-body">
+        <div class="picker-grid" id="picker-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ============ SECTION TYPES (mirror of lib/sectionTypes.js) ============
+    const SECTION_TYPES = {
+      hero: {
+        label: 'Hero Banner', icon: '🚀', description: 'Header with heading and CTAs',
+        fields: [
+          { name: 'heading', label: 'Heading', type: 'text' },
+          { name: 'subheading', label: 'Subheading', type: 'text' },
+          { name: 'description', label: 'Description', type: 'textarea' },
+          { name: 'primaryButtonText', label: 'Primary Button Text', type: 'text' },
+          { name: 'primaryButtonLink', label: 'Primary Button Link', type: 'text' },
+          { name: 'secondaryButtonText', label: 'Secondary Button Text', type: 'text' },
+          { name: 'secondaryButtonLink', label: 'Secondary Button Link', type: 'text' },
+          { name: 'backgroundStyle', label: 'Background', type: 'select', options: ['dark','gradient','image'] },
+          { name: 'backgroundImage', label: 'Background Image URL', type: 'text' }
+        ],
+        defaults: { heading: 'Your Heading Here', subheading: '', description: '', primaryButtonText: 'Get Started', primaryButtonLink: '#', secondaryButtonText: '', secondaryButtonLink: '', backgroundStyle: 'dark', backgroundImage: '' }
+      },
+      stats: {
+        label: 'Stats Bar', icon: '📊', description: 'Row of statistics (max 4)',
+        fields: [
+          { name: 'items', label: 'Stats', type: 'list', max: 4, itemFields: [
+            { name: 'value', label: 'Value', type: 'text' },
+            { name: 'label', label: 'Label', type: 'text' }
+          ]}
+        ],
+        defaults: { items: [{ value: '10+', label: 'Years' }] }
+      },
+      about: {
+        label: 'About / Bio', icon: '👤', description: 'About section with skills',
+        fields: [
+          { name: 'heading', label: 'Heading', type: 'text' },
+          { name: 'body', label: 'Body', type: 'textarea' },
+          { name: 'skills', label: 'Skills (comma-separated)', type: 'tags' },
+          { name: 'imageUrl', label: 'Image URL', type: 'text' },
+          { name: 'layout', label: 'Layout', type: 'select', options: ['text-only','text-left-image-right','text-right-image-left'] }
+        ],
+        defaults: { heading: 'About Me', body: '', skills: [], imageUrl: '', layout: 'text-only' }
+      },
+      services: {
+        label: 'Services Grid', icon: '⚙️', description: 'Grid of services',
+        fields: [
+          { name: 'heading', label: 'Heading', type: 'text' },
+          { name: 'subheading', label: 'Subheading', type: 'text' },
+          { name: 'columns', label: 'Columns', type: 'select', options: ['2','3','4'] },
+          { name: 'items', label: 'Services', type: 'list', itemFields: [
+            { name: 'icon', label: 'Icon', type: 'text' },
+            { name: 'title', label: 'Title', type: 'text' },
+            { name: 'description', label: 'Description', type: 'textarea' }
+          ]}
+        ],
+        defaults: { heading: 'What I Do', subheading: '', columns: 3, items: [] }
+      },
+      'portfolio-grid': {
+        label: 'Portfolio Grid', icon: '🖼️', description: 'Grid of portfolio projects',
+        fields: [
+          { name: 'heading', label: 'Heading', type: 'text' },
+          { name: 'subheading', label: 'Subheading', type: 'text' },
+          { name: 'source', label: 'Source', type: 'select', options: ['database','manual'] },
+          { name: 'columns', label: 'Columns', type: 'select', options: ['2','3'] },
+          { name: 'items', label: 'Manual Items', type: 'list', itemFields: [
+            { name: 'title', label: 'Title', type: 'text' },
+            { name: 'category', label: 'Category', type: 'text' },
+            { name: 'description', label: 'Description', type: 'textarea' },
+            { name: 'tags', label: 'Tags', type: 'tags' },
+            { name: 'imageUrl', label: 'Image URL', type: 'text' },
+            { name: 'url', label: 'Project URL', type: 'text' }
+          ]}
+        ],
+        defaults: { heading: 'Selected Work', subheading: '', source: 'database', columns: 2, items: [] }
+      },
+      testimonials: {
+        label: 'Testimonials', icon: '💬', description: 'Client testimonials',
+        fields: [
+          { name: 'heading', label: 'Heading', type: 'text' },
+          { name: 'source', label: 'Source', type: 'select', options: ['database','manual'] },
+          { name: 'items', label: 'Manual Items', type: 'list', itemFields: [
+            { name: 'name', label: 'Name', type: 'text' },
+            { name: 'title', label: 'Title', type: 'text' },
+            { name: 'company', label: 'Company', type: 'text' },
+            { name: 'text', label: 'Quote', type: 'textarea' },
+            { name: 'rating', label: 'Rating', type: 'text' },
+            { name: 'imageUrl', label: 'Image URL', type: 'text' }
+          ]}
+        ],
+        defaults: { heading: 'What Clients Say', source: 'database', items: [] }
+      },
+      'contact-form': {
+        label: 'Contact Form', icon: '📧', description: 'Configurable contact form',
+        fields: [
+          { name: 'heading', label: 'Heading', type: 'text' },
+          { name: 'subheading', label: 'Subheading', type: 'text' },
+          { name: 'fields', label: 'Form Fields', type: 'list', itemFields: [
+            { name: 'name', label: 'Field Name', type: 'text' },
+            { name: 'label', label: 'Field Label', type: 'text' },
+            { name: 'type', label: 'Type', type: 'select', options: ['text','email','textarea','select'] },
+            { name: 'required', label: 'Required', type: 'checkbox' },
+            { name: 'options', label: 'Options', type: 'tags' }
+          ]},
+          { name: 'submitLabel', label: 'Submit Button Label', type: 'text' },
+          { name: 'successMessage', label: 'Success Message', type: 'text' }
+        ],
+        defaults: { heading: 'Get in Touch', subheading: '', fields: [], submitLabel: 'Send', successMessage: 'Thanks!' }
+      },
+      'text-block': {
+        label: 'Text / Rich Content', icon: '📄', description: 'Text block with heading',
+        fields: [
+          { name: 'heading', label: 'Heading', type: 'text' },
+          { name: 'body', label: 'Body', type: 'textarea' },
+          { name: 'alignment', label: 'Alignment', type: 'select', options: ['left','center'] },
+          { name: 'maxWidth', label: 'Width', type: 'select', options: ['narrow','medium','wide'] }
+        ],
+        defaults: { heading: '', body: '', alignment: 'left', maxWidth: 'medium' }
+      },
+      'image-text': {
+        label: 'Image + Text', icon: '🖼️', description: 'Side-by-side image and text',
+        fields: [
+          { name: 'heading', label: 'Heading', type: 'text' },
+          { name: 'body', label: 'Body', type: 'textarea' },
+          { name: 'imageUrl', label: 'Image URL', type: 'text' },
+          { name: 'imagePosition', label: 'Image Position', type: 'select', options: ['left','right'] },
+          { name: 'buttonText', label: 'Button Text', type: 'text' },
+          { name: 'buttonLink', label: 'Button Link', type: 'text' }
+        ],
+        defaults: { heading: '', body: '', imageUrl: '', imagePosition: 'left', buttonText: '', buttonLink: '' }
+      },
+      'cta-banner': {
+        label: 'Call to Action', icon: '📣', description: 'Bold CTA banner',
+        fields: [
+          { name: 'heading', label: 'Heading', type: 'text' },
+          { name: 'subheading', label: 'Subheading', type: 'text' },
+          { name: 'buttonText', label: 'Button Text', type: 'text' },
+          { name: 'buttonLink', label: 'Button Link', type: 'text' },
+          { name: 'style', label: 'Style', type: 'select', options: ['accent','dark','gradient'] }
+        ],
+        defaults: { heading: 'Ready to Get Started?', subheading: '', buttonText: 'Contact Me', buttonLink: '#contact', style: 'accent' }
+      }
+    };
+
+    // ============ STATE ============
+    const token = localStorage.getItem('adminToken');
+    if (!token) window.location.href = 'index.html';
+
+    const params = new URLSearchParams(window.location.search);
+    let pageId = params.get('id');
+    const pageSlug = params.get('slug');
+    if (!pageId && !pageSlug) window.location.href = 'pages.html';
+
+    let page = null;
+    let selectedSectionId = null;
+    let dirty = false;
+
+    function authHeaders() { return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }; }
+    function escapeHTML(s) {
+      if (s == null) return '';
+      return String(s).replace(/[&<>'"]/g, t => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[t]));
+    }
+    function toast(msg, type = 'success') {
+      const el = document.getElementById('toast');
+      el.textContent = msg; el.className = `toast show ${type}`;
+      setTimeout(() => el.classList.remove('show'), 2500);
+    }
+    function genSid() { return `sect_${Math.random().toString(36).slice(2, 10)}`; }
+
+    // ============ LOAD ============
+    async function loadPage() {
+      try {
+        const url = pageId ? `/api/pages/${pageId}` : `/api/pages?slug=${encodeURIComponent(pageSlug)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!data.success && !data.page) throw new Error(data.message || 'Failed to load');
+        page = data.page;
+        pageId = page._id;
+        // Update URL if we loaded by slug
+        if (pageSlug) history.replaceState(null, '', `page-builder.html?id=${pageId}`);
+        renderAll();
+      } catch (err) {
+        console.error(err);
+        toast('Failed to load page', 'error');
+      }
+    }
+
+    function renderAll() {
+      document.getElementById('page-title').value = page.title || '';
+      const statusPill = document.getElementById('status-pill');
+      statusPill.textContent = page.status === 'published' ? 'Published' : 'Draft';
+      statusPill.className = `status-pill ${page.status}`;
+      renderSectionList();
+      refreshPreview();
+    }
+
+    // ============ SECTION LIST ============
+    function renderSectionList() {
+      const list = document.getElementById('sections-list');
+      if (!page.sections || page.sections.length === 0) {
+        list.innerHTML = `<p style="padding: 24px 12px; color: var(--text-muted); font-size: 13px; text-align: center;">No sections yet.<br>Click "Add Section" to get started.</p>`;
+        return;
+      }
+      list.innerHTML = page.sections.map(s => {
+        const cfg = SECTION_TYPES[s.type] || { label: s.type, icon: '📦' };
+        return `
+          <div class="section-item ${s.id === selectedSectionId ? 'active' : ''} ${s.visible === false ? 'hidden' : ''}"
+               draggable="true" data-id="${s.id}">
+            <span class="drag-handle">≡</span>
+            <div class="section-info">
+              <div class="section-label">${cfg.icon} ${escapeHTML(cfg.label)}</div>
+              <div class="section-type">${escapeHTML(s.type)}</div>
+            </div>
+            <div class="section-actions">
+              <button class="icon-btn" data-action="toggle" data-id="${s.id}" title="${s.visible === false ? 'Show' : 'Hide'}">${s.visible === false ? '👁️‍🗨️' : '👁️'}</button>
+              <button class="icon-btn danger" data-action="delete" data-id="${s.id}" title="Delete">×</button>
+            </div>
+          </div>`;
+      }).join('');
+
+      list.querySelectorAll('.section-item').forEach(el => {
+        el.addEventListener('click', e => {
+          if (e.target.closest('[data-action]')) return;
+          selectedSectionId = el.dataset.id;
+          renderSectionList();
+          renderEditor();
+        });
+        el.addEventListener('dragstart', handleDragStart);
+        el.addEventListener('dragover', handleDragOver);
+        el.addEventListener('drop', handleDrop);
+        el.addEventListener('dragend', handleDragEnd);
+        el.addEventListener('dragleave', e => el.classList.remove('drag-over'));
+      });
+
+      list.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          if (btn.dataset.action === 'toggle') toggleSectionVisibility(id);
+          if (btn.dataset.action === 'delete') deleteSection(id);
+        });
+      });
+    }
+
+    // ============ DRAG & DROP ============
+    let dragSourceId = null;
+    function handleDragStart(e) {
+      dragSourceId = e.currentTarget.dataset.id;
+      e.currentTarget.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      e.currentTarget.classList.add('drag-over');
+    }
+    function handleDrop(e) {
+      e.preventDefault();
+      const targetId = e.currentTarget.dataset.id;
+      if (!dragSourceId || dragSourceId === targetId) return;
+      const srcIdx = page.sections.findIndex(s => s.id === dragSourceId);
+      const tgtIdx = page.sections.findIndex(s => s.id === targetId);
+      if (srcIdx < 0 || tgtIdx < 0) return;
+      const [moved] = page.sections.splice(srcIdx, 1);
+      page.sections.splice(tgtIdx, 0, moved);
+      page.sections.forEach((s, i) => s.order = i);
+      dirty = true;
+      renderSectionList();
+      schedulePreviewRefresh();
+      // persist order
+      fetch('/api/pages/reorder', {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ pageId, sectionOrder: page.sections.map(s => s.id) })
+      }).catch(() => {});
+    }
+    function handleDragEnd(e) {
+      document.querySelectorAll('.section-item').forEach(el => {
+        el.classList.remove('dragging', 'drag-over');
+      });
+      dragSourceId = null;
+    }
+
+    // ============ SECTION ACTIONS ============
+    function toggleSectionVisibility(id) {
+      const s = page.sections.find(x => x.id === id);
+      if (!s) return;
+      s.visible = s.visible === false ? true : false;
+      dirty = true;
+      renderSectionList();
+      schedulePreviewRefresh();
+    }
+
+    function deleteSection(id) {
+      const s = page.sections.find(x => x.id === id);
+      if (!s) return;
+      const label = (SECTION_TYPES[s.type] || {}).label || s.type;
+      if (!confirm(`Delete "${label}" section?`)) return;
+      page.sections = page.sections.filter(x => x.id !== id);
+      if (selectedSectionId === id) selectedSectionId = null;
+      dirty = true;
+      renderSectionList();
+      renderEditor();
+      schedulePreviewRefresh();
+    }
+
+    // ============ EDITOR ============
+    function renderEditor() {
+      const area = document.getElementById('editor-area');
+      if (!selectedSectionId) {
+        area.innerHTML = `
+          <div class="editor-empty">
+            <div class="icon">✏️</div>
+            <h3>Select a section to edit</h3>
+            <p>Click a section from the left to edit its content.</p>
+          </div>`;
+        return;
+      }
+      const section = page.sections.find(s => s.id === selectedSectionId);
+      if (!section) { area.innerHTML = ''; return; }
+      const cfg = SECTION_TYPES[section.type];
+      if (!cfg) { area.innerHTML = `<p>Unknown section type: ${escapeHTML(section.type)}</p>`; return; }
+
+      const fieldsHTML = cfg.fields.map(f => renderField(f, section.data[f.name], section.id)).join('');
+      area.innerHTML = `
+        <div class="editor-header">
+          <h3><span class="editor-icon">${cfg.icon}</span>${escapeHTML(cfg.label)}</h3>
+          <button class="btn btn-secondary" style="flex:0" id="btn-done-editing">Done Editing</button>
+        </div>
+        ${fieldsHTML}`;
+
+      bindFieldListeners(section);
+      document.getElementById('btn-done-editing').addEventListener('click', () => {
+        selectedSectionId = null; renderSectionList(); renderEditor();
+      });
+    }
+
+    function renderField(field, value, sectionId) {
+      const id = `f_${sectionId}_${field.name}`;
+      if (field.type === 'text' || field.type === 'email') {
+        return `
+          <div class="form-field">
+            <label for="${id}">${escapeHTML(field.label)}</label>
+            <input type="${field.type}" id="${id}" data-field="${field.name}" value="${escapeHTML(value || '')}">
+          </div>`;
+      }
+      if (field.type === 'textarea') {
+        return `
+          <div class="form-field">
+            <label for="${id}">${escapeHTML(field.label)}</label>
+            <textarea id="${id}" data-field="${field.name}">${escapeHTML(value || '')}</textarea>
+          </div>`;
+      }
+      if (field.type === 'select') {
+        const opts = field.options.map(o => `<option value="${escapeHTML(o)}" ${String(value) === String(o) ? 'selected' : ''}>${escapeHTML(o)}</option>`).join('');
+        return `
+          <div class="form-field">
+            <label for="${id}">${escapeHTML(field.label)}</label>
+            <select id="${id}" data-field="${field.name}">${opts}</select>
+          </div>`;
+      }
+      if (field.type === 'checkbox') {
+        return `
+          <div class="form-field checkbox">
+            <input type="checkbox" id="${id}" data-field="${field.name}" ${value ? 'checked' : ''}>
+            <label for="${id}">${escapeHTML(field.label)}</label>
+          </div>`;
+      }
+      if (field.type === 'tags') {
+        const tagStr = Array.isArray(value) ? value.join(', ') : (value || '');
+        return `
+          <div class="form-field">
+            <label for="${id}">${escapeHTML(field.label)}</label>
+            <input type="text" id="${id}" data-field="${field.name}" data-tags="1" value="${escapeHTML(tagStr)}">
+          </div>`;
+      }
+      if (field.type === 'list') {
+        const items = Array.isArray(value) ? value : [];
+        const itemsHTML = items.map((item, i) => `
+          <div class="list-item" data-index="${i}">
+            <div class="list-item-header">
+              <span>Item ${i + 1}</span>
+              <button class="icon-btn danger" data-list-action="remove" data-list-field="${field.name}" data-index="${i}">×</button>
+            </div>
+            ${field.itemFields.map(sf => renderListItemField(sf, item[sf.name], sectionId, field.name, i)).join('')}
+          </div>`).join('');
+        const addDisabled = field.max && items.length >= field.max ? 'disabled' : '';
+        return `
+          <div class="form-field">
+            <label>${escapeHTML(field.label)}</label>
+            <div class="list-editor">
+              ${itemsHTML}
+              <button class="btn-add-item" data-list-action="add" data-list-field="${field.name}" ${addDisabled}>+ Add Item${field.max ? ` (max ${field.max})` : ''}</button>
+            </div>
+          </div>`;
+      }
+      return '';
+    }
+
+    function renderListItemField(field, value, sectionId, parentField, index) {
+      const id = `f_${sectionId}_${parentField}_${index}_${field.name}`;
+      const dataAttrs = `data-list-parent="${parentField}" data-list-index="${index}" data-field="${field.name}"`;
+      if (field.type === 'text') {
+        return `<div class="form-field"><label for="${id}">${escapeHTML(field.label)}</label><input type="text" id="${id}" ${dataAttrs} value="${escapeHTML(value || '')}"></div>`;
+      }
+      if (field.type === 'textarea') {
+        return `<div class="form-field"><label for="${id}">${escapeHTML(field.label)}</label><textarea id="${id}" ${dataAttrs}>${escapeHTML(value || '')}</textarea></div>`;
+      }
+      if (field.type === 'select') {
+        const opts = field.options.map(o => `<option value="${escapeHTML(o)}" ${String(value) === String(o) ? 'selected' : ''}>${escapeHTML(o)}</option>`).join('');
+        return `<div class="form-field"><label for="${id}">${escapeHTML(field.label)}</label><select id="${id}" ${dataAttrs}>${opts}</select></div>`;
+      }
+      if (field.type === 'checkbox') {
+        return `<div class="form-field checkbox"><input type="checkbox" id="${id}" ${dataAttrs} ${value ? 'checked' : ''}><label for="${id}">${escapeHTML(field.label)}</label></div>`;
+      }
+      if (field.type === 'tags') {
+        const tagStr = Array.isArray(value) ? value.join(', ') : (value || '');
+        return `<div class="form-field"><label for="${id}">${escapeHTML(field.label)}</label><input type="text" id="${id}" ${dataAttrs} data-tags="1" value="${escapeHTML(tagStr)}"></div>`;
+      }
+      return '';
+    }
+
+    function bindFieldListeners(section) {
+      const area = document.getElementById('editor-area');
+
+      // Top-level fields (not inside a list item)
+      area.querySelectorAll('[data-field]:not([data-list-index])').forEach(el => {
+        const fieldName = el.dataset.field;
+        const handler = () => {
+          let val;
+          if (el.type === 'checkbox') val = el.checked;
+          else if (el.dataset.tags) val = el.value.split(',').map(t => t.trim()).filter(Boolean);
+          else val = el.value;
+          section.data[fieldName] = val;
+          dirty = true;
+          schedulePreviewRefresh();
+        };
+        el.addEventListener('input', handler);
+        el.addEventListener('change', handler);
+      });
+
+      // List item fields
+      area.querySelectorAll('[data-list-parent]').forEach(el => {
+        const parent = el.dataset.listParent;
+        const idx = parseInt(el.dataset.listIndex, 10);
+        const fieldName = el.dataset.field;
+        const handler = () => {
+          let val;
+          if (el.type === 'checkbox') val = el.checked;
+          else if (el.dataset.tags) val = el.value.split(',').map(t => t.trim()).filter(Boolean);
+          else val = el.value;
+          if (!Array.isArray(section.data[parent])) section.data[parent] = [];
+          if (!section.data[parent][idx]) section.data[parent][idx] = {};
+          section.data[parent][idx][fieldName] = val;
+          dirty = true;
+          schedulePreviewRefresh();
+        };
+        el.addEventListener('input', handler);
+        el.addEventListener('change', handler);
+      });
+
+      // List add/remove
+      area.querySelectorAll('[data-list-action]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          const action = btn.dataset.listAction;
+          const fieldName = btn.dataset.listField;
+          if (action === 'add') {
+            if (!Array.isArray(section.data[fieldName])) section.data[fieldName] = [];
+            const cfg = SECTION_TYPES[section.type];
+            const fieldDef = cfg.fields.find(f => f.name === fieldName);
+            const newItem = {};
+            fieldDef.itemFields.forEach(sf => { newItem[sf.name] = sf.type === 'checkbox' ? false : (sf.type === 'tags' ? [] : ''); });
+            section.data[fieldName].push(newItem);
+          } else if (action === 'remove') {
+            const idx = parseInt(btn.dataset.index, 10);
+            section.data[fieldName].splice(idx, 1);
+          }
+          dirty = true;
+          renderEditor();
+          schedulePreviewRefresh();
+        });
+      });
+    }
+
+    // ============ ADD SECTION ============
+    document.getElementById('btn-add-section').addEventListener('click', () => {
+      const grid = document.getElementById('picker-grid');
+      grid.innerHTML = Object.entries(SECTION_TYPES).map(([type, cfg]) => `
+        <div class="picker-card" data-type="${type}">
+          <div class="picker-icon">${cfg.icon}</div>
+          <h4>${escapeHTML(cfg.label)}</h4>
+          <p>${escapeHTML(cfg.description)}</p>
+        </div>
+      `).join('');
+      grid.querySelectorAll('.picker-card').forEach(card => {
+        card.addEventListener('click', () => addSection(card.dataset.type));
+      });
+      document.getElementById('picker-backdrop').classList.add('open');
+    });
+    document.getElementById('picker-close').addEventListener('click', () => {
+      document.getElementById('picker-backdrop').classList.remove('open');
+    });
+
+    function addSection(type) {
+      const cfg = SECTION_TYPES[type];
+      if (!cfg) return;
+      const newSection = {
+        id: genSid(),
+        type,
+        order: page.sections.length,
+        visible: true,
+        data: JSON.parse(JSON.stringify(cfg.defaults))
+      };
+      page.sections.push(newSection);
+      selectedSectionId = newSection.id;
+      dirty = true;
+      document.getElementById('picker-backdrop').classList.remove('open');
+      renderSectionList();
+      renderEditor();
+      schedulePreviewRefresh();
+    }
+
+    // ============ SAVE / PUBLISH ============
+    async function savePage(status) {
+      const title = document.getElementById('page-title').value.trim() || page.title;
+      try {
+        const res = await fetch(`/api/pages/${pageId}`, {
+          method: 'PUT', headers: authHeaders(),
+          body: JSON.stringify({
+            title, sections: page.sections, seo: page.seo, status
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.page) {
+          page = data.page;
+          dirty = false;
+          renderAll();
+          toast(status === 'published' ? 'Page published!' : 'Draft saved');
+        } else {
+          toast(data.message || 'Save failed', 'error');
+        }
+      } catch (err) {
+        toast('Network error', 'error');
+      }
+    }
+
+    document.getElementById('btn-save-draft').addEventListener('click', () => savePage('draft'));
+    document.getElementById('btn-publish').addEventListener('click', () => savePage('published'));
+
+    document.getElementById('page-title').addEventListener('input', () => { dirty = true; });
+
+    // ============ PREVIEW ============
+    let previewRefreshTimer = null;
+    function schedulePreviewRefresh() {
+      clearTimeout(previewRefreshTimer);
+      previewRefreshTimer = setTimeout(refreshPreview, 600);
+    }
+    function refreshPreview() {
+      const frame = document.getElementById('preview-frame');
+      const url = `/preview.html?pageId=${pageId}&t=${Date.now()}`;
+      // Use postMessage if possible, otherwise reload
+      frame.src = url;
+    }
+    document.getElementById('btn-refresh-preview').addEventListener('click', refreshPreview);
+
+    document.getElementById('device-desktop').addEventListener('click', () => {
+      document.getElementById('preview-frame').classList.remove('mobile');
+      document.getElementById('device-desktop').classList.add('active');
+      document.getElementById('device-mobile').classList.remove('active');
+    });
+    document.getElementById('device-mobile').addEventListener('click', () => {
+      document.getElementById('preview-frame').classList.add('mobile');
+      document.getElementById('device-mobile').classList.add('active');
+      document.getElementById('device-desktop').classList.remove('active');
+    });
+
+    // Listen for preview iframe asking for fresh data (in-memory)
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'request-preview-page') {
+        const iframe = document.getElementById('preview-frame');
+        if (iframe.contentWindow) {
+          iframe.contentWindow.postMessage({ type: 'preview-page', page }, '*');
+        }
+      }
+    });
+
+    // Warn on leaving with unsaved changes
+    window.addEventListener('beforeunload', (e) => {
+      if (dirty) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    loadPage();
+  </script>
+</body>
+</html>

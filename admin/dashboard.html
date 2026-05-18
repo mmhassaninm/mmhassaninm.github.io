@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OmniBot CMS — Dashboard</title>
+  <title>Catalyst CMS — Dashboard</title>
 
   <!-- Typography & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -242,6 +242,7 @@
     .stat-messages .stat-icon-wrapper { background: rgba(16, 185, 129, 0.1); color: var(--success); }
     .stat-unread .stat-icon-wrapper { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
     .stat-testimonials .stat-icon-wrapper { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .stat-pages .stat-icon-wrapper { background: rgba(108, 99, 255, 0.1); color: #6c63ff; }
 
     /* Dashboard Layout Splits */
     .dashboard-layout {
@@ -393,7 +394,7 @@
   <div class="mobile-header">
     <div class="sidebar-brand" style="border:none; padding:0;">
       <div class="brand-logo">🟢</div>
-      <div class="brand-name">OmniBot</div>
+      <div class="brand-name">Catalyst</div>
     </div>
     <button class="btn-hamburger" id="hamburger-toggle">☰</button>
   </div>
@@ -402,13 +403,19 @@
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo">🟢</div>
-      <div class="brand-name">OmniBot</div>
+      <div class="brand-name">Catalyst</div>
     </div>
     <ul class="sidebar-menu">
       <li class="menu-item active">
         <a href="dashboard.html">
           <span class="menu-icon">📊</span>
           <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="pages.html">
+          <span class="menu-icon">📄</span>
+          <span>Pages</span>
         </a>
       </li>
       <li class="menu-item">
@@ -504,6 +511,14 @@
         </div>
         <span class="stat-value" id="count-testimonials">0</span>
       </div>
+
+      <div class="stat-card stat-pages">
+        <div class="stat-header">
+          <span class="stat-title">Published Pages</span>
+          <div class="stat-icon-wrapper">📄</div>
+        </div>
+        <span class="stat-value" id="count-pages">0</span>
+      </div>
     </div>
 
     <!-- Dashboard Splits -->
@@ -539,6 +554,14 @@
       <div class="card">
         <h3 class="card-title">Quick Actions</h3>
         <div class="actions-list">
+          <a href="page-builder.html?slug=home" class="btn-action">
+            <span>Customize Home Page</span>
+            <span>➜</span>
+          </a>
+          <a href="pages.html" class="btn-action">
+            <span>Manage Pages</span>
+            <span>➜</span>
+          </a>
           <a href="portfolio.html" class="btn-action">
             <span>Add Portfolio Project</span>
             <span>➜</span>
@@ -623,16 +646,18 @@
 
       try {
         // Fetch resources in parallel, handling 404/Not Found gracefully (for unbuilt endpoints)
-        const [portfolioRes, messagesRes, testimonialsRes] = await Promise.all([
+        const [portfolioRes, messagesRes, testimonialsRes, pagesRes] = await Promise.all([
           fetch('/api/portfolio', { headers }).catch(() => null),
           fetch('/api/messages', { headers }).catch(() => null),
-          fetch('/api/testimonials', { headers }).catch(() => null)
+          fetch('/api/testimonials', { headers }).catch(() => null),
+          fetch('/api/pages?status=published', { headers }).catch(() => null)
         ]);
 
         let projectCount = 0;
         let messageCount = 0;
         let unreadCount = 0;
         let testimonialCount = 0;
+        let pageCount = 0;
         let messages = [];
 
         // Parse Portfolio data
@@ -655,11 +680,18 @@
           testimonialCount = Array.isArray(testimonialData) ? testimonialData.length : 0;
         }
 
+        // Parse Pages data
+        if (pagesRes && pagesRes.ok) {
+          const pagesData = await pagesRes.json();
+          if (pagesData && Array.isArray(pagesData.pages)) pageCount = pagesData.pages.length;
+        }
+
         // Update UI
         document.getElementById('count-projects').textContent = projectCount;
         document.getElementById('count-messages').textContent = messageCount;
         document.getElementById('count-unread').textContent = unreadCount;
         document.getElementById('count-testimonials').textContent = testimonialCount;
+        document.getElementById('count-pages').textContent = pageCount;
 
         // Populate Recent Messages Preview Table
         const previewBody = document.getElementById('messages-preview-body');

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview — Catalyst CMS</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="preview-banner">⚠ Preview Mode — Changes are not visible to the public</div>
+
+  <main id="page-body">
+    <div class="not-found" style="padding: 80px 24px;">
+      <p style="color: var(--text-muted);">Loading preview…</p>
+    </div>
+  </main>
+
+  <script src="/renderer.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const pageId = params.get('pageId') || params.get('id');
+
+    async function load() {
+      const body = document.getElementById('page-body');
+      if (!pageId) {
+        body.innerHTML = '<div class="not-found"><h1>No Page</h1><p>Missing pageId parameter.</p></div>';
+        return;
+      }
+      try {
+        const res = await fetch(`/api/pages/${pageId}`);
+        const data = await res.json();
+        if (!data.success || !data.page) throw new Error('not found');
+        await window.CatalystRenderer.renderPage(data.page, body);
+      } catch (err) {
+        body.innerHTML = '<div class="not-found"><h1>Error</h1><p>Could not load this page.</p></div>';
+      }
+    }
+
+    // Support live in-memory updates pushed from the parent page builder
+    window.addEventListener('message', async (e) => {
+      if (e.data && e.data.type === 'preview-page' && e.data.page) {
+        await window.CatalystRenderer.renderPage(e.data.page, document.getElementById('page-body'));
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>

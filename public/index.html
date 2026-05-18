@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalyst Technologies</title>
+  <meta name="description" content="">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a class="nav-logo" href="/"><span class="accent">⬢</span> Catalyst</a>
+      <div class="nav-links" id="nav-links"></div>
+      <a href="#contact-form" class="nav-cta">Hire Me</a>
+      <button class="nav-toggle" id="nav-toggle">☰</button>
+    </div>
+  </nav>
+
+  <!-- PAGE BODY (rendered dynamically) -->
+  <main id="page-body">
+    <div class="not-found" style="padding: 100px 24px;">
+      <p style="color: var(--text-muted);">Loading…</p>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <div style="font-size: 20px; font-weight: 700; margin-bottom: 8px;"><span style="color: var(--accent);">⬢</span> Catalyst</div>
+        <div class="footer-tagline">© 2026 Catalyst Technologies · Built for the Saudi & Gulf market</div>
+      </div>
+      <div class="footer-links">
+        <a href="https://facebook.com" target="_blank" rel="noopener">Facebook</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/renderer.js"></script>
+  <script>
+    // Map URL path to slug
+    function pathToSlug(path) {
+      const clean = String(path || '/').split('?')[0].split('#')[0];
+      if (clean === '/' || clean === '') return 'home';
+      return clean.replace(/^\/+|\/+$/g, '').toLowerCase();
+    }
+
+    async function loadAndRender() {
+      const slug = pathToSlug(window.location.pathname);
+      const body = document.getElementById('page-body');
+      try {
+        const res = await fetch(`/api/pages?slug=${encodeURIComponent(slug)}&status=published`);
+        if (!res.ok) throw new Error('not found');
+        const data = await res.json();
+        if (!data.success || !data.page) throw new Error('not found');
+        await window.CatalystRenderer.renderPage(data.page, body);
+      } catch (err) {
+        body.innerHTML = `
+          <div class="not-found">
+            <h1>404</h1>
+            <p>This page does not exist or has not been published yet.</p>
+            <a href="/" class="btn btn-primary">Go Home</a>
+          </div>`;
+      }
+    }
+
+    async function loadNav() {
+      try {
+        const res = await fetch('/api/pages?status=published&nav=true');
+        const data = await res.json();
+        const pages = (data.pages || []).filter(p => !p.isHome);
+        const navEl = document.getElementById('nav-links');
+        const links = pages.map(p => `<a href="/${encodeURIComponent(p.slug)}">${p.title.replace(/[<>]/g, '')}</a>`);
+        navEl.innerHTML = `<a href="/">Home</a>` + links.join('');
+      } catch (err) {
+        document.getElementById('nav-links').innerHTML = '<a href="/">Home</a>';
+      }
+    }
+
+    document.getElementById('nav-toggle').addEventListener('click', () => {
+      document.getElementById('nav-links').classList.toggle('open');
+    });
+
+    loadNav();
+    loadAndRender();
+  </script>
+</body>
+</html>

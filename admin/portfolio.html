@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalyst CMS — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-bg: #1a1a2e;
+      --sidebar-hover: #22223b;
+      --content-bg: #f9fafb;
+      --accent: #95BF47;
+      --text-dark: #1f2937;
+      --text-muted: #6b7280;
+      --card-bg: #ffffff;
+      --border-color: #e5e7eb;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', -apple-system, sans-serif; }
+    body { background: var(--content-bg); color: var(--text-dark); min-height: 100vh; display: flex; }
+    .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; box-shadow: 4px 0 10px rgba(0,0,0,0.1); }
+    .sidebar-brand { padding: 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .brand-logo { width: 36px; height: 36px; background: rgba(149,191,71,0.1); border: 1px solid var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .brand-name { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #fff 40%, var(--accent) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .sidebar-menu { list-style: none; padding: 24px 16px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; overflow-y: auto; }
+    .menu-item a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #9ca3af; text-decoration: none; border-radius: 10px; font-weight: 500; font-size: 15px; transition: all 0.2s; }
+    .menu-item a:hover { background: var(--sidebar-hover); color: #fff; }
+    .menu-item.active a { background: rgba(149,191,71,0.15); color: var(--accent); font-weight: 600; }
+    .menu-icon { font-size: 18px; width: 24px; text-align: center; }
+    .sidebar-footer { padding: 20px 16px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .btn-logout { width: 100%; background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-logout:hover { background: var(--danger); color: #fff; }
+    .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; min-height: 100vh; }
+    .header-bar { margin-bottom: 40px; }
+    .header-bar h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    .header-bar p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 60px 40px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+    .card .icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
+    .card h3 { font-size: 22px; margin-bottom: 8px; }
+    .card p { color: var(--text-muted); margin-bottom: 28px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .btn-primary { background: var(--accent); color: #fff; text-decoration: none; padding: 12px 22px; border-radius: 10px; font-weight: 600; display: inline-block; }
+    .btn-primary:hover { background: #7ea438; }
+    .mobile-header { display: none; background: var(--sidebar-bg); color: #fff; padding: 16px 20px; align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 200; }
+    .btn-hamburger { background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.active { transform: translateX(0); }
+      .main-content { margin-left: 0; padding: 100px 20px 40px; }
+      .mobile-header { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-header">
+    <div class="sidebar-brand" style="border:none;padding:0;">
+      <div class="brand-logo">🟢</div>
+      <div class="brand-name">Catalyst</div>
+    </div>
+    <button class="btn-hamburger" id="hamburger-toggle">☰</button>
+  </div>
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">🟢</div>
+      <div class="brand-name">Catalyst</div>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="menu-item "><a href="dashboard.html"><span class="menu-icon">📊</span><span>Dashboard</span></a></li>
+      <li class="menu-item "><a href="pages.html"><span class="menu-icon">📄</span><span>Pages</span></a></li>
+      <li class="menu-item active"><a href="portfolio.html"><span class="menu-icon">💼</span><span>Portfolio</span></a></li>
+      <li class="menu-item "><a href="services.html"><span class="menu-icon">🛠️</span><span>Services</span></a></li>
+      <li class="menu-item "><a href="content.html"><span class="menu-icon">📝</span><span>Section Content</span></a></li>
+      <li class="menu-item "><a href="testimonials.html"><span class="menu-icon">⭐</span><span>Testimonials</span></a></li>
+      <li class="menu-item "><a href="messages.html"><span class="menu-icon">📥</span><span>Inbox</span></a></li>
+      <li class="menu-item "><a href="media.html"><span class="menu-icon">🖼️</span><span>Media Library</span></a></li>
+      <li class="menu-item "><a href="settings.html"><span class="menu-icon">⚙️</span><span>Settings</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <button class="btn-logout" id="btn-logout"><span>🚪</span><span>Sign Out</span></button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="header-bar">
+      <h2>Portfolio</h2>
+      <p>Manage your portfolio projects</p>
+    </div>
+    <div class="card">
+      <div class="icon">💼</div>
+      <h3>Coming Soon</h3>
+      <p>This screen is part of the upcoming roadmap. In the meantime, you can manage your site content using the visual Page Builder.</p>
+      <a href="pages.html" class="btn-primary">Go to Pages</a>
+    </div>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('adminToken');
+    if (!token) window.location.href = 'index.html';
+    document.getElementById('btn-logout').addEventListener('click', () => {
+      localStorage.removeItem('adminToken');
+      window.location.href = 'index.html';
+    });
+    document.getElementById('hamburger-toggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('active');
+    });
+  </script>
+</body>
+</html>

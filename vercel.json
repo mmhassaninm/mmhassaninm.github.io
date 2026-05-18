@@ -3,6 +3,8 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/admin/(.*)", "destination": "/admin/$1" },
-    { "source": "/(.*)", "destination": "/public/$1" }
+    { "source": "/preview", "destination": "/public/preview.html" },
+    { "source": "/((?!api/|admin/).*\\..+)", "destination": "/public/$1" },
+    { "source": "/(.*)", "destination": "/public/index.html" }
   ]
 }
