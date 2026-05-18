@@ -5,42 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Catalyst Technologies</title>
   <meta name="description" content="">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="navbar-inner">
-      <a class="nav-logo" href="/"><span class="accent">⬢</span> Catalyst</a>
-      <div class="nav-links" id="nav-links"></div>
-      <a href="#contact-form" class="nav-cta">Hire Me</a>
-      <button class="nav-toggle" id="nav-toggle">☰</button>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/">
+        <span class="brand-square"></span>
+        Catalyst
+      </a>
+      <ul class="nav-links" id="nav-links"></ul>
+      <a href="#contact-form" class="btn btn-grad">Hire Me</a>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Menu">☰</button>
     </div>
   </nav>
 
   <!-- PAGE BODY (rendered dynamically) -->
   <main id="page-body">
-    <div class="not-found" style="padding: 100px 24px;">
-      <p style="color: var(--text-muted);">Loading…</p>
+    <div class="not-found">
+      <p style="color: var(--muted);">Loading…</p>
     </div>
   </main>
 
   <!-- FOOTER -->
   <footer class="site-footer">
     <div class="footer-inner">
-      <div>
-        <div style="font-size: 20px; font-weight: 700; margin-bottom: 8px;"><span style="color: var(--accent);">⬢</span> Catalyst</div>
-        <div class="footer-tagline">© 2026 Catalyst Technologies · Built for the Saudi & Gulf market</div>
-      </div>
-      <div class="footer-links">
-        <a href="https://facebook.com" target="_blank" rel="noopener">Facebook</a>
-      </div>
+      <div>© 2026 Catalyst Technologies</div>
+      <a class="social-link" href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 8h-3v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.378 14.192 5 15.115 5H18V0h-3.808C10.596 0 9 1.583 9 4.615V8z" fill="currentColor"/>
+        </svg>
+      </a>
     </div>
   </footer>
 
   <script src="/renderer.js"></script>
   <script>
-    // Map URL path to slug
     function pathToSlug(path) {
       const clean = String(path || '/').split('?')[0].split('#')[0];
       if (clean === '/' || clean === '') return 'home';
@@ -61,7 +65,7 @@
           <div class="not-found">
             <h1>404</h1>
             <p>This page does not exist or has not been published yet.</p>
-            <a href="/" class="btn btn-primary">Go Home</a>
+            <a href="/" class="btn btn-grad btn-lg">Go Home</a>
           </div>`;
       }
     }
@@ -72,15 +76,31 @@
         const data = await res.json();
         const pages = (data.pages || []).filter(p => !p.isHome);
         const navEl = document.getElementById('nav-links');
-        const links = pages.map(p => `<a href="/${encodeURIComponent(p.slug)}">${p.title.replace(/[<>]/g, '')}</a>`);
-        navEl.innerHTML = `<a href="/">Home</a>` + links.join('');
+        const otherLinks = pages.map(p => `<li><a class="nav-link" href="/${encodeURIComponent(p.slug)}">${p.title.replace(/[<>]/g, '')}</a></li>`).join('');
+        navEl.innerHTML = `
+          <li><a class="nav-link" href="#about">About</a></li>
+          <li><a class="nav-link" href="#services">Services</a></li>
+          <li><a class="nav-link" href="#portfolio-grid">Work</a></li>
+          <li><a class="nav-link" href="#contact-form">Contact</a></li>
+          ${otherLinks}`;
       } catch (err) {
-        document.getElementById('nav-links').innerHTML = '<a href="/">Home</a>';
+        document.getElementById('nav-links').innerHTML = `
+          <li><a class="nav-link" href="#about">About</a></li>
+          <li><a class="nav-link" href="#services">Services</a></li>
+          <li><a class="nav-link" href="#portfolio-grid">Work</a></li>
+          <li><a class="nav-link" href="#contact-form">Contact</a></li>`;
       }
     }
 
     document.getElementById('nav-toggle').addEventListener('click', () => {
       document.getElementById('nav-links').classList.toggle('open');
+    });
+
+    // Close mobile nav when a link is clicked
+    document.getElementById('nav-links').addEventListener('click', (e) => {
+      if (e.target.classList.contains('nav-link')) {
+        document.getElementById('nav-links').classList.remove('open');
+      }
     });
 
     loadNav();
