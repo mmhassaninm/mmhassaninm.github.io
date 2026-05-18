@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OmniBot — Admin Login</title>
+  <title>Catalyst CMS — Admin Login</title>
   
   <!-- Premium Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -309,7 +309,7 @@
         <div class="logo-container">
           <span class="logo-icon">🟢</span>
         </div>
-        <h1 class="title" id="form-title">OmniBot CMS</h1>
+        <h1 class="title" id="form-title">Catalyst CMS</h1>
         <p class="subtitle" id="form-subtitle">Enter your admin credentials to login</p>
       </div>
 
@@ -330,7 +330,7 @@
 
         <!-- Hidden initially, shown only if the server needs initial bootstrapping -->
         <div class="form-group setup-field" id="setup-key-container">
-          <label class="form-label" for="setupKey">ADMIN_SETUP_KEY</label>
+          <label class="form-label" for="setupKey" id="setup-key-label">Setup Key</label>
           <div class="input-wrapper">
             <input class="form-input" type="password" id="setupKey" placeholder="Enter seeding key from .env">
           </div>
@@ -429,10 +429,10 @@
             needsSetup = true;
             setupField.classList.add('active');
             setupKeyInput.required = true;
-            formTitle.textContent = 'OmniBot Seeding';
-            formSubtitle.textContent = 'Specify account credentials & setup key to bootstrap your first admin';
+            formTitle.textContent = 'Catalyst Seeding';
+            formSubtitle.textContent = 'First time setup — enter your Admin Setup Key to initialize';
             btnText.textContent = 'Bootstrap Admin';
-            showToast(data.message, 'error');
+            showToast('First time setup — enter your Admin Setup Key to initialize', 'error');
           } else {
             showToast(data.message || 'Authentication failed. Please check credentials.', 'error');
           }
